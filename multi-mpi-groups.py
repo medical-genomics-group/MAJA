@@ -297,11 +297,11 @@ def main(n, p, q, iters, burnin, groups, itc, xfile, yfile, dir, true_dir):
             for g in range(G):
                 # update pi for each group
                 if Z_sum[g] == 0:
-                    pi[g] = rng.dirichlet((p-Z_sum[g]-1, 1))
-                elif Z_sum[g] == p:
-                    pi[g] = rng.dirichlet((p-Z_sum[g]+1, Z_sum[g]-1))
+                    pi[g] = rng.dirichlet((groups[g]-Z_sum[g]-1, 1))
+                elif Z_sum[g] == groups[g]:
+                    pi[g] = rng.dirichlet((groups[g]-Z_sum[g]+1, Z_sum[g]-1))
                 else:
-                    pi[g] = rng.dirichlet((p-Z_sum[g], Z_sum[g]))
+                    pi[g] = rng.dirichlet((groups[g]-Z_sum[g], Z_sum[g]))
 
                 start_g = 0 if g == 0 else groups[g]
                 end_g = p if g == G-1 else groups[g+1]
