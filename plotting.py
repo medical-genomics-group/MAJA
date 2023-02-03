@@ -36,8 +36,8 @@ def main(q, groups, inputdir, resultsdir):
  
     # estimated vs true beta
     fig, ax = plt.subplots(figsize=(8,8), tight_layout=True)
-    ax.scatter(y=true_beta[:,0], x=mean_beta[:,0], facecolors='none', edgecolors='grey', label="trait 1")
-    ax.scatter(y=true_beta[:,1], x=mean_beta[:,1], marker="x", color="red", label="trait 2")
+    ax.scatter(x=true_beta[:,0], y=mean_beta[:,0], facecolors='none', edgecolors='grey', label="trait 1")
+    ax.scatter(x=true_beta[:,1], y=mean_beta[:,1], marker="x", color="red", label="trait 2")
     ax.set(xlabel="true effect sizes", ylabel="estimated effect sizes")
     ax.legend(loc=4, fontsize=18, framealpha=0.)
     #plt.margins(0,0)
