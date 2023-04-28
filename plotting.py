@@ -5,7 +5,7 @@ Install dependencies:
 ```
 pip install numpy loguru matplotlib
 ```
-python plotting.py --q 2 --g 2 --inputdir MC --resultsdir results
+python plotting.py --q 3 --g 3 --inputdir MC --resultsdir results
 """
 
 import sys
@@ -17,7 +17,7 @@ from loguru import logger
 def main(q, groups, inputdir, resultsdir):
     ## true values
     true_V = np.loadtxt(inputdir+'/true_V.txt')
-    true_sigma = np.loadtxt(inputdir+'/true_sigma.txt')
+    true_sigma = np.loadtxt(inputdir+'/true_sigma2.txt')
     true_beta = np.loadtxt(inputdir+'/true_betas.txt')
     #estimated values
     mean_beta = np.loadtxt(resultsdir+'/mean_beta.txt')
@@ -27,10 +27,10 @@ def main(q, groups, inputdir, resultsdir):
     trace_sigma_std = np.loadtxt(resultsdir+'/var_sigma.txt')
 
     # improve plots by setting fontsizes and removing white space
-    plt.rcParams['axes.labelsize'] = 18
+    plt.rcParams['axes.labelsize'] = 20
     plt.rcParams['axes.labelweight'] = 'bold'
-    plt.rcParams['ytick.labelsize']=15
-    plt.rcParams['xtick.labelsize']=15
+    plt.rcParams['ytick.labelsize']=20
+    plt.rcParams['xtick.labelsize']=20
     plt.rcParams["text.usetex"]=True
     plt.rcParams['legend.handlelength'] = 0 # remove errorbar from legend
  
@@ -38,8 +38,11 @@ def main(q, groups, inputdir, resultsdir):
     fig, ax = plt.subplots(figsize=(8,8), tight_layout=True)
     ax.scatter(x=true_beta[:,0], y=mean_beta[:,0], facecolors='none', edgecolors='grey', label="trait 1")
     ax.scatter(x=true_beta[:,1], y=mean_beta[:,1], marker="x", color="red", label="trait 2")
+    if q==3:
+        ax.scatter(x=true_beta[:,2], y=mean_beta[:,2], marker="x", color="blue", label="trait 3")
     ax.set(xlabel="true effect sizes", ylabel="estimated effect sizes")
-    ax.legend(loc=4, fontsize=18, framealpha=0.)
+    ax.legend(loc=4, fontsize=20, framealpha=0.)
+    ax.plot([0, 1], [0, 1], transform=ax.transAxes, color='black', ls="--")
     #plt.margins(0,0)
     fig.savefig(resultsdir+'/est_vs_true_beta.png')
     ax.set(xlim=(-0.02, 0.02), ylim=(-0.02, 0.02))
@@ -50,12 +53,17 @@ def main(q, groups, inputdir, resultsdir):
     plt.rcParams['axes.titlesize'] = 18
     plt.rcParams['axes.titleweight'] = 'bold'
     plt.rcParams['axes.titlepad'] = -50  # pad is in points...
-    figV, plotV = plt.subplots(ncols=2,figsize=(22,10), tight_layout=True)
+    figV, plotV = plt.subplots(ncols=groups,figsize=(12*groups,10), tight_layout=True)
     labels = [r'$\mathbf{V_{11}}$', r'$\mathbf{V_{12}}$', r'$\mathbf{V_{21}}$', r'$\mathbf{V_{22}}$',]
+    if q==3:
+        labels = [r'$\mathbf{V_{11}}$', r'$\mathbf{V_{12}}$', r'$\mathbf{V_{13}}$', 
+                  r'$\mathbf{V_{21}}$', r'$\mathbf{V_{22}}$', r'$\mathbf{V_{23}}$',
+                  r'$\mathbf{V_{31}}$', r'$\mathbf{V_{32}}$', r'$\mathbf{V_{33}}$',]
     for g in range(groups):
         z = 0
         for i in range(q):
             for j in range(q):
+                logger.info(f"{g=}, {i=}, {j=}, {z=}, {trace_V[g*q+i, j]=}, {true_V[g*q+i, j]=}")
                 if z==0:
                     plotV[g].errorbar(z, trace_V[g*q+i, j], yerr= np.sqrt(trace_V_std[g*q+i,j]),marker='o', color='red', mfc='None', label='est.')
                     plotV[g].errorbar(z, true_V[g*q+i, j], marker='x', color='black', label='true')
@@ -63,17 +71,21 @@ def main(q, groups, inputdir, resultsdir):
                     plotV[g].errorbar(z, trace_V[g*q+i, j], yerr= np.sqrt(trace_V_std[g*q+i,j]),marker='o', color='red', mfc='None')
                     plotV[g].errorbar(z, true_V[g*q+i, j], marker='x', color='black')
                 z += 1
-        title = 'group '+str(g)
-        plotV[g].set(ylabel='values', title=title)
-        plotV[g].legend(loc=9, fontsize=18, framealpha=0., bbox_to_anchor=[0.5, 0.9])
+        title = 'Group '+str(g+1)
+        plotV[g].set(ylabel='values')
+        plotV[g].legend(loc=4, title=title, title_fontsize=20, fontsize=20, framealpha=1.0, bbox_to_anchor=[0.55, 0.8], edgecolor='black')
         plt.sca(plotV[g])
-        plt.xticks(np.arange(q*q), labels, fontsize=15, weight='bold')
+        plt.xticks(np.arange(q*q), labels, fontsize=20, weight='bold')
     figV.savefig(resultsdir+'/V.png')
 
     # estimated vs true sigma
     figS, plotS = plt.subplots(figsize=(10,9.6), tight_layout=True)
     labels = [r'$\mathbf{\Sigma_{11}}$', r'$\mathbf{\Sigma_{12}}$', r'$\mathbf{\Sigma_{21}}$', r'$\mathbf{\Sigma_{22}}$']
-    plt.xticks(np.arange(q*q), labels, fontsize=18, weight='bold')
+    if q==3:
+        labels = [r'$\mathbf{\Sigma_{11}}$', r'$\mathbf{\Sigma_{12}}$', r'$\mathbf{\Sigma_{13}}$', 
+                  r'$\mathbf{\Sigma_{21}}$', r'$\mathbf{\Sigma_{22}}$', r'$\mathbf{\Sigma_{23}}$',
+                  r'$\mathbf{\Sigma_{31}}$', r'$\mathbf{\Sigma_{32}}$', r'$\mathbf{\Sigma_{33}}$',]
+    plt.xticks(np.arange(q*q), labels, fontsize=20, weight='bold')
     z = 0
     for i in range(q):
         for j in range(q):
@@ -85,7 +97,7 @@ def main(q, groups, inputdir, resultsdir):
                 plotS.errorbar(z, true_sigma[i, j], marker='x', color='black')
             z += 1
     plotS.set(ylabel='values')
-    figS.legend(loc=9, fontsize=18, framealpha=0.)
+    figS.legend(loc=9, fontsize=20, framealpha=1.0, bbox_to_anchor=[0.55, 0.9], edgecolor='black') 
     figS.savefig(resultsdir+'/sigma.png')
 
 ##########################
