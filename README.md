@@ -24,7 +24,7 @@ true_V.txt
 true_sigma.txt
 ```
 
-## multi-mpi-groups.py:
+## multi-mpi-GS-v1.py:
 
 Gibbs sampler with groups
 
