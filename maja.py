@@ -6,7 +6,7 @@ Install dependencies:
 pip install numpy loguru scipy tqdm mpi4py welford matplotlib pandas zarr dask
 ```
 run interactivley with 4 processes (given by -n): 
-mpiexec -n 4 python -m mpi4py multi_mpi_GS.py 
+mpiexec -n 4 python -m mpi4py maja.py 
 --n 10000 --p 80000 --q 3 
 --iters 5000 --burnin 1000 
 --x xinput.zarr --y phenotype.txt --dir results
@@ -18,7 +18,7 @@ mpiexec -n 4 python -m mpi4py multi_mpi_GS.py
 for slurm submission: ntasks needs to be set
 #SBATCH --ntasks=number of processes
 
-srun python -m mpi4py multi_mpi_GS.py 
+srun python -m mpi4py maja.py 
 --n 10000 --p 80000 --q 3 
 --iters 5000 --burnin 1000 
 --x xinput.zarr --y phenotype.txt --dir results
