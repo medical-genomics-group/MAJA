@@ -25,7 +25,7 @@ git clone https://github.com/medical-genomics-group/MAJA
 The phenotypic data is required to be stored as txt format with one trait per column, standardized per column. Not available measures need to be imputed. <br/>
 The genomic data needs to be standardized per columns and saved in zarr format (https://zarr.readthedocs.io/). zarr only stores the genomic values, thus one needs to keep track of variant or probe ids separately. Several files can be given as input, but the total amount of files needs to fit into RAM.
 
-## 3. Run code for data
+## 3. Run MAJA on data
 Load modules and source pyenv:
 ```
 module load python/3.11.1
@@ -136,6 +136,8 @@ The *phenotype.txt* and the corresponding xfiles can then be used as input for s
 
 ## Association studies
 The model is set up so that markers are either included in the model for all genetic components or not included at all. Therefore, if a marker is included with a high posterior inclusion probability, one needs to check for each trait if the effect size +/- standard deviation includes 0. If 0 is covered by effect size +/- standard deviation, there is no association.
+
+
 
 
 In case of questions or problems, please contact ilse.kraetschmer@ist.ac.at
