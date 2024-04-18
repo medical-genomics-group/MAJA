@@ -5,16 +5,16 @@ Install dependencies:
 ```
 pip install numpy loguru scipy zarr dask
 ```
-generate MC:
-python genY.py --n 18264 --p 18216 --p0 17216 --q 2 --dir MC --xfiles /nfs/scistore13/robingrp/human_data/GSM-preprocessed/final-zarr/std_methylation_chr22.zarr --scen 0
+generate phenotype on top of data:
+python genY.py --n 18000 --p 1000 --p0 80000 --q 2 --dir MC --xfiles xfile.zarr --scen 0
 ```
 n = individuals
 p = markers split per group
 p0 = markers set to 0 per group
-q = number of traits
-xfiles = path to genotype matrix files (/nfs/scistore13/robingrp/human_data/GSM-preprocessed/final-zarr/std_methylation_chr22.zarr)
+q = number of traits (can currently be 2 or 3; covariance scenarios are only set up for q=2 and 3)
+xfiles = path to genotype matrix files
 dir = path to directory where phenotype should be stored
-scen = 0
+scen = different covariance scenarios: 0=independent traits, 1=negative correlation, 2=positive correlation
 """
 
 import sys
@@ -60,6 +60,8 @@ def main(n, groups, groups0, q, scen, xfiles):
             [[0.3, -0.5*np.sqrt(0.3)*np.sqrt(0.5), -0.5*np.sqrt(0.3)*np.sqrt(0.1)],[0.3, -0.5*np.sqrt(0.3)*np.sqrt(0.5), 0.5, -0.5*np.sqrt(0.3)*np.sqrt(0.1)], [-0.5*np.sqrt(0.3)*np.sqrt(0.1), -0.5*np.sqrt(0.5)*np.sqrt(0.1), 0.1]],
             [[0.3, +0.5*np.sqrt(0.3)*np.sqrt(0.5), +0.5*np.sqrt(0.3)*np.sqrt(0.1)],[0.3, -0.5*np.sqrt(0.3)*np.sqrt(0.5), 0.5, -0.5*np.sqrt(0.3)*np.sqrt(0.1)], [+0.5*np.sqrt(0.3)*np.sqrt(0.1), +0.5*np.sqrt(0.5)*np.sqrt(0.1), 0.1]],
             ])
+    else:
+        logger.info("Covariance matrix is not defined for this number of traits".)
 
     for g in range(G):
         logger.info(f"{g=}, {scen=}, {var[scen]=}")
