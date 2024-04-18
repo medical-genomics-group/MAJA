@@ -35,7 +35,7 @@ source *nameofyourenv*/bin/activate
 
 Run interactivley with 4 processes (given by -n): 
 ```
-mpiexec -n 4 python -m mpi4py multi_mpi_GS.py 
+mpiexec -n 4 python -m mpi4py maja.py 
 --n 10000 --p 80000 --q 3 
 --iters 5000 --burnin 1000 
 --x xinput.zarr --y phenotype.txt --dir results
@@ -49,7 +49,7 @@ For slurm submission, the number of processes needs to be set by
 ```
 
 ```
-srun python -m mpi4py multi_mpi_GS.py 
+srun python -m mpi4py maja.py 
 --n 10000 --p 80000 --q 3 
 --iters 5000 --burnin 1000 
 --x xinput1.zarr xinput2.zarr --y phenotype.txt --dir results
