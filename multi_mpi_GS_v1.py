@@ -5,16 +5,48 @@ Install dependencies:
 ```
 pip install numpy loguru scipy tqdm mpi4py welford matplotlib pandas zarr dask
 ```
-run with 4 processes (given by -n); 
-either give --g or --gindex;
-
-mpiexec -n 4 python -m mpi4py multi_mpi_180423.py --n 10000 --p 10003 --q 3
---iters 500 --burnin 100 
---x MC/ --y MC/phenotype.txt --dir results
+run interactivley with 4 processes (given by -n): 
+mpiexec -n 4 python -m mpi4py multi_mpi_GS.py 
+--n 10000 --p 80000 --q 3 
+--iters 5000 --burnin 1000 
+--x xinput.zarr --y phenotype.txt --dir results
 --diagnostics True
---g 4000 4000 2000 
---gindex group_index.txt
+--g 40000 40000
+(--gindex group_index.txt)
+
+```
+for slurm submission: ntasks needs to be set
+#SBATCH --ntasks=number of processes
+
+srun python -m mpi4py multi_mpi_GS.py 
+--n 10000 --p 80000 --q 3 
+--iters 5000 --burnin 1000 
+--x xinput.zarr --y phenotype.txt --dir results
+--diagnostics True
+--g 40000 40000
+(--gindex group_index.txt)
+
+```
+options:
+--n     number of individuals (required)
+--p     number of markers (required)
+--q     number of traits (required)
+--iters total number of iterations (default=5000)
+--burnin number of iterations in the burnin (default=1000)
+--x     genomic data file in zarr format; needs to be standardized per column (required)
+--y     phenotype file in txt format, 1 trait per column; needs to be standardized per column (required)
+--dir   path to output directory (required)
+--g     number of markers in each group (either give --g or --gindex)
+--gindex    index file (.txt) with group index for each marker in order (either give --g or --gindex)
+--diagnostics   make trace plots for diagnostics (default=False)
+--restart   bool to restart sampler on iteration 999, i.e. after burnin (default=False); requires the correspoding epsilon_999.txt file as y input; if another iteration, is used for restart, the files need to be changed in the code
+--itc   counter for updating epsilon (default=1)
 """
+## turn off multithreading in numpy
+import os
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 import sys
 import argparse
@@ -81,20 +113,22 @@ def sample_V(beta, L, D, q, Z, a, b, s):
     ## all zero groups
     if (np.sum(np.diag(beta_2)) <= 0.001) or (Z==0):
     #if np.all(beta_2 < 10e-09):
+        logger.info(f"{np.sum(np.diag(beta_2))=}, {beta_2=}")
         V = np.zeros((q,q))
         Vinv = 10e+09*np.eye(q)
         L = np.eye(q)
         D = np.ones(q)
     ## non-zero groups
     else:
-        beta_2 *= Z
+        beta_2*=Z
         ww = np.linalg.multi_dot([L, beta_2, L.T])
-
+        logger.info(f"{Z=}, {np.diag(ww)=}")
         for i in range(q):
             #sample elements of D
-            D[i] = stats.invgamma.rvs(a= a/2 + Z, 
-                scale=a*b/2 + ww[i, i]
-                )
+            D[i] = stats.invgamma.rvs(
+                    a= a/2 + Z, 
+                    scale=a*b/2 + ww[i, i]
+               )
             #sample elements of L
             if i >= 1:
                 si = np.linalg.inv((1 / D[i]) * beta_2[0:i, 0:i] + s*np.eye(i))
@@ -107,7 +141,7 @@ def sample_V(beta, L, D, q, Z, a, b, s):
     return V, Vinv, L, D
 
 
-def main(n, p, q, iters, burnin, groups, itc, xfiles, yfile, dir, gindex, diagnostics):
+def main(n, p, q, iters, burnin, groups, itc, xfiles, yfile, dir, gindex, diagnostics, restart):
 
     if diagnostics:
         logger.info(f"Running with diagnostics: Saving traces of sigma, V and Z.")
@@ -165,27 +199,28 @@ def main(n, p, q, iters, burnin, groups, itc, xfiles, yfile, dir, gindex, diagno
         z = p_split*worldSize-p
         az = np.zeros((n, p_split*worldSize-p))
         logger.info(f"Added {z} columns of zeros to x.")
-        xdata = da.concatenate([xdata, az], axis=1)
-        logger.info(f"{group_idx.shape=}")
+        xdata = da.concatenate([xdata[:n,:], az], axis=1)
+        #logger.info(f"{group_idx.shape=}")
         group_idx = np.append(group_idx, np.ones(z)*G)
         group_idx = group_idx.astype(int)
-        logger.info(f"{group_idx.shape=}")
-        logger.info(f"{G=}, {group_idx=}")
+        #logger.info(f"{group_idx.shape=}")
+        #logger.info(f"{G=}, {group_idx=}")
     # actually load only data that is needed in each process
-    x = xdata[:,rank*p_split:(rank+1)*p_split].compute()
+    x = xdata[:n,rank*p_split:(rank+1)*p_split].compute()
     logger.info(f"{rank=}, {x.shape=}")
-    logger.info(f"{rank=}, {x=}")
+    #logger.info(f"{rank=}, {x=}")
 
     if rank == 0:
+
         ## open phenotype file
-        epsilon = np.loadtxt(yfile)
+        epsilon = np.loadtxt(yfile)[:n]
 
         # initalize parameters
         init = {
             "beta": np.zeros((p_split*worldSize, q)),
             "V": np.repeat([0.5/G*np.eye(q)], G, axis=0),
             "sigma": 0.5*np.array(np.eye(q)),
-            "pi": np.repeat(np.array([[0.9, 0.1]]), G, axis=0), #[0.5,0.5]
+            "pi": np.repeat(np.array([[0.75, 0.25]]), G, axis=0), #[0.5,0.5]
             "D": np.array(G*[np.ones(q)]),
             "L": np.array(G*[np.eye(q)]),
             "De": np.ones(q),
@@ -201,23 +236,36 @@ def main(n, p, q, iters, burnin, groups, itc, xfiles, yfile, dir, gindex, diagno
             "sv": 0.0001
         }
 
-        beta = init["beta"]
-        beta = beta.flatten() #vectorize for sending data
-        V = np.array(init["V"])
+        if restart==False:
+            beta = init["beta"]
+            V = np.array(init["V"])
+            sigma = np.array(init["sigma"])
+            pi = init["pi"]
+            L = init["L"]
+            Le = init["Le"]
+        else:
+            V = np.loadtxt(dir+'/V_999.txt').reshape(G,q,q)
+            sigma = np.loadtxt(dir+'/sigma2_999.txt')
+            beta = pd.read_csv(dir+'/beta_999.csv.zip', compression='zip').to_numpy()           
+            beta = np.concatenate([beta, np.zeros((p_split*worldSize-p, q))], axis=0)
+            L = np.loadtxt(dir+'/L_999.txt').reshape(G,q,q)
+            Le = np.loadtxt(dir+'/Le_999.txt')
+            Z_sum = np.loadtxt(dir+'/Z_999.txt').astype(np.int32).reshape(G)
+            pi = init["pi"]
+            for g in range(G):
+                pi[g] = rng.dirichlet((groups[g]-Z_sum[g], Z_sum[g]))
+
+        beta = beta.flatten() #vectorize for seding data
+        mu = init["mu"]
+        D = init["D"]
+        tracker = np.zeros(p_split*worldSize)
         for g in range(G):
             V_inv[g] = linalg.inv(V[g])
-        sigma = np.array(init["sigma"])
         sigma_inv = linalg.inv(sigma)
-        pi = init["pi"]
-        mu = init["mu"]
-        L = init["L"]
-        D = init["D"]
-        Le = init["Le"]
+        #Le = init["Le"]
         De = init["De"]
         logger.info(f"initialize V as {V=}")
         logger.info(f"initialize sigma as {sigma=}")
-        tracker = np.zeros(p_split*worldSize)
-        logger.info(f"{tracker=}")
         
         # generate storage using the Welford package
         w_beta = welford.Welford()
@@ -317,6 +365,7 @@ def main(n, p, q, iters, burnin, groups, itc, xfiles, yfile, dir, gindex, diagno
                 comm.Bcast(epsilon, root=0)
                 diff = np.zeros((n,q))
         
+        #logger.info(f"{rank=}, {Z=}")
         comm.Barrier()
         # sum up number of non-zero effects
         comm.Reduce(Z, Z_sum, MPI.SUM, root=0)
@@ -326,7 +375,7 @@ def main(n, p, q, iters, burnin, groups, itc, xfiles, yfile, dir, gindex, diagno
 
         if rank == 0:
             beta = beta.reshape((p_split*worldSize, q))
-            logger.info(f"{Z_sum=}")
+            # logger.info(f"{Z_sum=}")
             #logger.info(f"{tracker=}")
 
             for g in range(G):
@@ -363,7 +412,7 @@ def main(n, p, q, iters, burnin, groups, itc, xfiles, yfile, dir, gindex, diagno
                 trace_V[it] = V
                 trace_sigma[it] = sigma
                 trace_Z[it] = Z_sum
-                if (it%500==0):
+                if (it%500==0) or (it==burnin-1):
                     dfm = pd.DataFrame(beta[:p])
                     dfm.to_csv(dir+'/beta_'+str(it)+'.csv.zip', index=False, compression='zip', sep=',')
                     np.savetxt(dir+'/V_'+str(it)+'.txt', V.reshape(G*q,q))
@@ -371,6 +420,7 @@ def main(n, p, q, iters, burnin, groups, itc, xfiles, yfile, dir, gindex, diagno
                     np.savetxt(dir+'/Z_'+str(it)+'.txt', trace_Z[it])
                     np.savetxt(dir+'/prob_'+str(it)+'.txt', tracker[:p])
                     np.savetxt(dir+'/L_'+str(it)+'.txt', L.reshape(G*q,q))
+                    np.savetxt(dir+'/Le_'+str(it)+'.txt', Le)
                     np.savetxt(dir+'/epsilon_'+str(it)+'.txt', epsilon)
                     np.savetxt(dir+'/trace_sigma.txt', trace_sigma.diagonal(0,1,2))
                     np.savetxt(dir+'/trace_Z.txt', trace_Z)
@@ -452,14 +502,15 @@ if __name__ == "__main__":
     parser.add_argument('--p', type=int, help='number of markers', required = True)
     parser.add_argument('--q', type=int, help='number of traits', required = True)
     parser.add_argument('--g', nargs='+', type=int, help='number of markers in each group')
-    parser.add_argument('--iters', type=int, default=10000, help='number of iterations (default = 10000)')
+    parser.add_argument('--iters', type=int, default=5000, help='number of iterations (default = 5000)')
     parser.add_argument('--burnin', type=int, default=1000, help='number of iterations in burnin (default = 1000)')
-    parser.add_argument('--itc', type=int, default=2, help='counter for updating epsilon (default=2)')
+    parser.add_argument('--itc', type=int, default=1, help='counter for updating epsilon (default=1)')
     parser.add_argument('--x', type=str, nargs='+', help='directory in which genotype matrix (csv.zip) is stored', required = True)
     parser.add_argument('--y', type=str, help='phenotype matrix filename in txt file format', required = True)
     parser.add_argument('--dir', type=str, help='path to directory where the results are stored', required = True)
     parser.add_argument('--gindex', type=str, help='file with group index information')
     parser.add_argument('--diagnostics', type=bool, default=False, help='store traces for diagnostics; False by default')
+    parser.add_argument('--restart', type=bool, default=False, help='restart with burnin values (default=False)')
     args = parser.parse_args()
     logger.info(args)
 
@@ -483,6 +534,7 @@ if __name__ == "__main__":
         yfile = args.y, # phenotype file
         dir = args.dir, # path to results directory
         gindex = args.gindex, # path to directory with true values
-        diagnostics = args.diagnostics # boolean for diagnostics
+        diagnostics = args.diagnostics, # boolean for diagnostics
+        restart = args.restart, #boolean for restart
         ) 
     logger.info("Done.")
