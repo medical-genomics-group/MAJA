@@ -113,7 +113,7 @@ def sample_V(beta, L, D, q, Z, a, b, s):
     ## all zero groups
     if (np.sum(np.diag(beta_2)) <= 0.001) or (Z==0):
     #if np.all(beta_2 < 10e-09):
-        logger.info(f"{np.sum(np.diag(beta_2))=}, {beta_2=}")
+        #logger.info(f"{np.sum(np.diag(beta_2))=}, {beta_2=}")
         V = np.zeros((q,q))
         Vinv = 10e+09*np.eye(q)
         L = np.eye(q)
@@ -122,7 +122,7 @@ def sample_V(beta, L, D, q, Z, a, b, s):
     else:
         beta_2*=Z
         ww = np.linalg.multi_dot([L, beta_2, L.T])
-        logger.info(f"{Z=}, {np.diag(ww)=}")
+        #logger.info(f"{Z=}, {np.diag(ww)=}")
         for i in range(q):
             #sample elements of D
             D[i] = stats.invgamma.rvs(
