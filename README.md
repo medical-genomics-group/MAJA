@@ -138,18 +138,26 @@ The *phenotype.txt* and the corresponding xfiles can then be used as input for s
 ## Test MAJA on example MC
 The directory MC contains simulated genomic and phenotypic data for two traits in the correct file formats for n=1,000 individuals. The genomic data (genotype.zarr) emulates methylation data, i.e. each of the p=2,000 simulated probes is drawn indpendently from a standard normal distribution. The 500 causal effects (true_betas.txt) are drawn from a multivariate normal distribution with V = [[0.5, 0.5 * sqrt(0.3 * 0.5)], [0.5 * sqrt(0.3 * 0.5), 0.3]] and randomly assigned to probes. The rest of the effects are set to 0. Residual errors (true_epsilon.txt) are drawn from a normal distribution with mean 0 and standard deviation sqrt(1-var(X betas)). The penotypes (phenotype.txt) are calculated as genotypic data times effects plus residual errors.
 
-Run interactively with 4 processes on simulated data using the command:
+Run interactively with 2 processes on simulated data using the command:
 ```
-mpiexec -n 4 python -m mpi4py maja.py 
+mpiexec -n 2 python -m mpi4py maja.py 
 --n 1000 --p 2000 --q 2 
 --iters 2000 --burnin 1000 
 --x MC/genotype.zarr --y MC/phenotype.txt --dir results/
 --diagnostics True
 --g 2000
 ```
-
 In case you are having troubles running this example with openmpi on a Mac, try the option --pmixmca ptl_tcp_if_include lo0
 
+Since it is a very small dataset meant for testing, you can also run without MPI.
+```
+python maja.py 
+--n 1000 --p 2000 --q 2 
+--iters 2000 --burnin 1000 
+--x MC/genotype.zarr --y MC/phenotype.txt --dir results/
+--diagnostics True
+--g 2000
+```
 
 ## Association studies
 The model is set up so that markers are either included in the model for all genetic components or not included at all. Therefore, if a marker is included with a high posterior inclusion probability, one needs to check for each trait if the effect size +/- standard deviation includes 0. If 0 is covered by effect size +/- standard deviation, there is no association.
