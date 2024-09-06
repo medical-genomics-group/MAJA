@@ -135,17 +135,17 @@ The script *genY.py* generates phenotypes and effects using real genomic data, a
 The *phenotype.txt* and the corresponding xfiles can then be used as input for step 3.
 
 
-## Test MAJA on MC
-The directory MC contains simulated genomic and phenotypic data for two traits in the correct file formats for n=10,000 individuals. The genomic data (genotype.zarr) emulates methylation data, i.e. each of the p=20,000 simulated probes is drawn indpendently from a standard normal distribution. The 1000 causal effects (true_betas.txt) are drawn from a multivariate normal distribution with V = [[0.5, 0.5 * sqrt(0.3 * 0.5)], [0.5 * sqrt(0.3 * 0.5), 0.3]] and randomly assigned to probes. The rest of the effects are set to 0. Residual errors (true_epsilon.txt) are drawn from a normal distribution with mean 0 and standard deviation sqrt(1-var(X betas)). The penotypes (phenotype.txt) are calculated as genotypic data times effects plus residual errors.
+## Test MAJA on example MC
+The directory MC contains simulated genomic and phenotypic data for two traits in the correct file formats for n=1,000 individuals. The genomic data (genotype.zarr) emulates methylation data, i.e. each of the p=2,000 simulated probes is drawn indpendently from a standard normal distribution. The 500 causal effects (true_betas.txt) are drawn from a multivariate normal distribution with V = [[0.5, 0.5 * sqrt(0.3 * 0.5)], [0.5 * sqrt(0.3 * 0.5), 0.3]] and randomly assigned to probes. The rest of the effects are set to 0. Residual errors (true_epsilon.txt) are drawn from a normal distribution with mean 0 and standard deviation sqrt(1-var(X betas)). The penotypes (phenotype.txt) are calculated as genotypic data times effects plus residual errors.
 
 Run interactively with 4 processes on simulated data using the command:
 ```
 mpiexec -n 4 python -m mpi4py maja.py 
---n 10000 --p 20000 --q 2 
+--n 1000 --p 2000 --q 2 
 --iters 2000 --burnin 1000 
 --x MC/genotype.zarr --y MC/phenotype.txt --dir results/
 --diagnostics True
---g 20000
+--g 2000
 ```
 
 In case you are having troubles running this example with openmpi on a Mac, try the option --pmixmca ptl_tcp_if_include lo0
