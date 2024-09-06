@@ -25,7 +25,7 @@ git clone https://github.com/medical-genomics-group/MAJA
 The phenotypic data is required to be stored as txt format with one trait per column, standardized per column. Not available measures need to be imputed. <br/>
 The genomic data needs to be standardized per columns and saved in zarr format (https://zarr.readthedocs.io/). zarr only stores the genomic values, thus one needs to keep track of variant or probe ids separately. Several files can be given as input, but the total amount of files needs to fit into RAM. 
 
-plink or vcf files can be converted to zarr format using convert_to_zarr.py. Probes with more than 5% missing values will be removed and remaining NA values will be replaced with the column mean. Other data cleaning has to be done beforehand.
+plink or vcf files can be standardized and converted to zarr format using convert_to_zarr.py. Probes with more than 5% missing values will be removed and remaining NA values will be replaced with the column mean. Other data cleaning has to be done beforehand.
 
 Load modules and source pyenv:
 ```
@@ -43,7 +43,7 @@ python convert_to_zarr.py --filename filename --outdir dir/
 --outdir           output directory (required)
 ```
 ### Output:
-**genotype.zarr**: genomic data in zarr format <br/>
+**genotype.zarr**: genomic data standardized per column in zarr format <br/>
 **rsids.csv**: chromosome, bp position and id of the varinats saved in the same order as in genotype.zarr <br/>
 **ids.csv**: sample IDs in the same order as in genotype.zarr <br/>
 
