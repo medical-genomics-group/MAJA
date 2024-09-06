@@ -2,7 +2,7 @@
 
 MAJA is a multivariate joint Bayesian method (Gibbs sampler) that is able to (i) estimate the unique contribution of individual loci, genes, or molecular pathways, to variation in one or more traits; (ii) determine genetic covariances and correlations; and (iii) find shared and distinct associations between multiple traits, while allowing for sparsity and correlations within the genomic data. It is suitable for high-dimensional data and flexible in the provided number of traits.
 
-The code is written in python using MPI and tested on python/3.11.1 with openmpi/4.1.4, run on a high performance computing cluster using slurm.
+The code is written in python using MPI and tested on python/3.11.1 with openmpi/4.1.4 and python/3.12 with openmpi/4.1.6, run on a high performance computing cluster using slurm.
 Information about which input parameters a program requires and how to run it is alos given in the first few lines of each program. 
 
 ## 1. Set up python environment:
