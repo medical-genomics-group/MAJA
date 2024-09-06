@@ -27,7 +27,13 @@ The genomic data needs to be standardized per columns and saved in zarr format (
 
 plink or vcf files can be converted to zarr format using convert_to_zarr.py. Probes with more than 5% missing values will be removed and remaining NA values will be replaced with the column mean. Other data cleaning has to be done beforehand.
 
-Run conversion code after loading modules and sourcing pyenv (see step 4):
+Load modules and source pyenv:
+```
+module load python/3.11.1
+module load openmpi/4.1.4
+source *nameofyourenv*/bin/activate
+```
+Run conversion code:
 ```
 python convert_to_zarr.py --filename filename --outdir dir/
 ```
@@ -42,12 +48,7 @@ python convert_to_zarr.py --filename filename --outdir dir/
 **ids.csv**: sample IDs in the same order as in genotype.zarr <br/>
 
 ## 4. Run MAJA on data
-Load modules and source pyenv:
-```
-module load python/3.11.1
-module load openmpi/4.1.4
-source *nameofyourenv*/bin/activate
-```
+Load modules and source pyenv (see step 3)
 
 Run interactivley with 4 processes (given by -n): 
 ```
