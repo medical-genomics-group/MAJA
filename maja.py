@@ -60,7 +60,6 @@ import matplotlib.pyplot as plt
 from loguru import logger
 from tqdm import trange
 import dask.array as da
-import dask.dataframe as dd
 import pandas as pd
 import zarr
 
