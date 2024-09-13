@@ -47,7 +47,6 @@ def main(filename, outdir):
 
     ## input = bed file
     elif filename.endswith('.bed'):
-        filename = sample_file("small.bed")
         # open file
         bed = open_bed(filename)
         # get dimensions
