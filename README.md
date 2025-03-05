@@ -12,7 +12,7 @@ module load openmpi/4.1.4
 python -m venv *nameofyourenv*
 source *nameofyourenv*/bin/activate
 pip install -U pip
-pip install numpy scipy matplotlib loguru mpi4py welford zarr dask pandas tqdm bed_reader scikit-allel
+pip install numpy scipy matplotlib loguru mpi4py welford zarr==2.17.2 dask pandas tqdm bed_reader scikit-allel
 deactivate
 ```
 
