@@ -7,12 +7,12 @@ Information about which input parameters a program requires and how to run it is
 
 ## 1. Set up python environment:
 ```
-module load python/3.11.1
-module load openmpi/4.1.4
+module load python/3.12.8
+module load openmpi/4.1.6
 python -m venv *nameofyourenv*
 source *nameofyourenv*/bin/activate
 pip install -U pip
-pip install numpy scipy matplotlib loguru mpi4py welford zarr==2.17.2 dask pandas tqdm bed_reader scikit-allel
+pip install numpy scipy matplotlib loguru mpi4py welford zarr dask pandas tqdm bed_reader scikit-allel
 deactivate
 ```
 
