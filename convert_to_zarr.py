@@ -107,10 +107,16 @@ def main(filename, outdir):
 
     # save genotype in zarr format
     n, p = X.shape
-    z = zarr.array(Xnorm, chunks=(None,1000))
+    if zarr.__version__.startswith('2'):
+        logger.info("zarr version 2")
+        z = zarr.array(Xnorm, chunks=(None,1000))
+        zarr.save(outdir+'/genotype.zarr', z)
+    elif zarr.__version__.startswith('3'):
+        logger.info("zarr version 3")
+        z = zarr.create_array(store=f'{outdir}/genotype.zarr', shape=Xnorm.shape, chunks=(20000,1000), dtype='float')
+        z[:] = Xnorm.values
     logger.info(f"{z.info=}")
     logger.info(f"saved {n=} individuals, {p=} markers")
-    zarr.save(outdir+'/genotype.zarr', z)
 
 ##########################
 if __name__ == "__main__":
