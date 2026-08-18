@@ -2,6 +2,8 @@
 
 MAJA is a multivariate joint Bayesian method (Gibbs sampler) that is able to (i) estimate the unique contribution of individual loci, genes, or molecular pathways, to variation in one or more traits; (ii) determine genetic covariances and correlations; and (iii) find shared and distinct associations between multiple traits, while allowing for sparsity and correlations within the genomic data. It is suitable for high-dimensional data and flexible in the provided number of traits.
 
+A slightly adapted version of MAJA for estimating covariance between two sexes is available in the directory maja_bee. See README within the directory for further instructions.
+
 The code is written in python using MPI and tested on python/3.11.1 with openmpi/4.1.4 and python/3.12 with openmpi/4.1.6, run on a high performance computing cluster using slurm.
 Information about which input parameters a program requires and how to run it is also given in the first few lines of each program. 
 
@@ -183,6 +185,6 @@ The model is set up so that markers are either included in the model for all gen
 In case of questions or problems, please contact ilse.kraetschmer@ist.ac.at
 
 Reference:\
-Discovery of shared epigenetic pathways across human phenotypes\
+MAJA: Multivariate Bayesian model for discovery of shared epigenetic pathways across human phenotypes\
 Ilse Krätschmer, Hannah M. Smith, Daniel L. McCartney, Elena Bernabeu, Mahdi Mahmoudi, Archie Campbell, Janie Corley, Sarah E Harris, Simon R. Cox, Riccardo E. Marioni, Matthew R. Robinson\
-doi: https://doi.org/10.1101/2024.04.15.589547
+doi: https://doi.org/10.1093/bioadv/vbag231
